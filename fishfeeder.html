@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fish Feeder Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+        }
+        h2 {
+            color: #0077cc;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+        button {
+            background: #0077cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #005fa3;
+        }
+        .status {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🐟 Fish Feeder Control</h2>
+
+    <div class="container">
+        <p class="status">Last Feed: <span id="lastFeed">-</span> sec</p>
+        <p class="status">Next Feed: <span id="nextFeed">-</span> sec</p>
+
+        <button onclick="setFeedTime(18)">Set 18s</button>
+        <button onclick="setFeedTime(25)">Set 25s</button>
+        <button onclick="setFeedTime(50)">Set 50s</button>
+        <button onclick="feedNow()">Feed Now</button>
+    </div>
+
+    <script>
+        const ESP32_IP = "http://<ESP32_IP>";  // Replace with your ESP32's actual IP
+
+        async function fetchStatus() {
+            try {
+                let response = await fetch(`${ESP32_IP}/status`);
+                let data = await response.json();
+                document.getElementById("lastFeed").textContent = data.lastFeed;
+                document.getElementById("nextFeed").textContent = data.nextFeed;
+            } catch (error) {
+                console.error("Error fetching status:", error);
+            }
+        }
+
+        async function setFeedTime(seconds) {
+            try {
+                await fetch(`${ESP32_IP}/setFeedTime`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: `interval=${seconds}`
+                });
+                fetchStatus();  // Refresh status after updating interval
+            } catch (error) {
+                console.error("Error setting feed time:", error);
+            }
+        }
+
+        async function feedNow() {
+            try {
+                await fetch(`${ESP32_IP}/feedNow`);
+                fetchStatus();  // Refresh status after feeding
+            } catch (error) {
+                console.error("Error triggering feed:", error);
+            }
+        }
+
+        // Fetch feeder status when the page loads
+        fetchStatus();
+    </script>
+
+</body>
+</html>
